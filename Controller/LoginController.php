@@ -23,7 +23,8 @@ foreach ($fetch as $row) {
     }
 
 }
-$_SESSION['error'] = '<div style="color: red; font-size: 10px">Attention, la combinaison mail et/ou mot de passe est incorrecte, veuillez réessayer</div>';
+$_SESSION['error'] = '<div class="alert alert-danger" role="alert">Attention, la combinaison mail et/ou mot de passe est incorrecte, veuillez réessayer</div>';
 header('Location: ../login.php');
+
 
 ?>

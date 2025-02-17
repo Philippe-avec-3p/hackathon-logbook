@@ -1,3 +1,5 @@
+<?php $_SESSION['error'] = null ?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -24,14 +26,24 @@
         }
     </style>
 </head>
-<body>
-<div class="container">
-    <h1 class="my-4">Transcription en Temps Réel</h1>
-    <p>Commencez à parler et votre discours sera transcrit ici :</p>
-    <button id="micButton" class="btn btn-light inactive">
-        🎤
-    </button>
-    <div id="transcription">Votre transcription apparaîtra ici...</div>
+<body class="bg-dark text-white">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="h3 mb-0">Transcription en Temps Réel</h1>
+                </div>
+                <div class="card-body">
+                    <p>Commencez à parler et votre discours sera transcrit ici :</p>
+                    <button id="micButton" class="btn btn-light inactive">
+                        🎤
+                    </button>
+                    <div id="transcription" class="border p-3 mt-3 bg-light text-dark">Votre transcription apparaîtra ici...</div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
