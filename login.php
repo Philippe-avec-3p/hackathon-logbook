@@ -263,16 +263,16 @@ include "public/theme.php"
         </div>
 
         <div class="forgot-password">
-            <a href="#">Mot de passe oublié ?</a>
+            <a href="404.php">Mot de passe oublié ?</a>
         </div>
 
         <button type="submit" class="submit-button">Se connecter</button>
 
-        <a href="#" class="register-link">Inscrivez vous sur Logbook</a>
+        <a href="404.php" class="register-link">Inscrivez vous sur Logbook</a>
     </form>
 
     <!-- Formulaire Étudiant -->
-    <form class="login-form" id="student-form">
+    <form class="login-form" id="student-form" action="404.php" method="POST">
         <div class="form-group">
             <label>Quelle est votre clef secrète ?</label>
             <div class="secret-key-inputs">
