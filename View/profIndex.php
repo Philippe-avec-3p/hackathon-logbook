@@ -1,113 +1,90 @@
-<?php $_SESSION['error'] = null ?>
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transcription en Temps Réel</title>
-    <!-- Lien vers le CSS de Bootstrap -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Mes enregistrements</title>
     <style>
-        #transcription {
-            font-size: 1.5em;
-            margin-top: 20px;
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            min-height: 100vh;
         }
-        #micButton {
-            font-size: 2em;
+
+        .left-panel {
+            background-color: #004D4D;
+            color: white;
+            padding: 3rem;
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+        }
+
+        .slogan {
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .right-panel {
+            flex: 1;
+            padding: 3rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .new-audio-button {
+            background-color: #004D4D;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
-            transition: color 0.3s;
+            font-size: 1rem;
         }
-        #micButton.active {
-            color: green;
+
+        .recordings-list {
+            list-style: none;
+            padding: 0;
         }
-        #micButton.inactive {
-            color: red;
+
+        .recording-item {
+            padding: 1rem;
+            border: 1px solid #ddd;
+            margin-bottom: 1rem;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
         }
     </style>
 </head>
-<body class="bg-dark text-white">
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h1 class="h3 mb-0">Transcription en Temps Réel</h1>
-                </div>
-                <div class="card-body">
-                    <p>Commencez à parler et votre discours sera transcrit ici :</p>
-                    <button id="micButton" class="btn btn-light inactive">
-                        🎤
-                    </button>
-                    <div id="transcription" class="border p-3 mt-3 bg-light text-dark">Votre transcription apparaîtra ici...</div>
-                </div>
-            </div>
-        </div>
-    </div>
+<body>
+<div class="left-panel">
+    <div class="logo">Logbook</div>
 </div>
 
-<script>
-    // Vérifier la compatibilité du navigateur avec l'API Web Speech
-    if ('webkitSpeechRecognition' in window) {
-        const recognition = new webkitSpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = 'fr-FR';
+<div class="right-panel">
+    <div class="header">
+        <h1>Mes enregistrements</h1>
+        <button class="new-audio-button" onclick="window.location.href='../transcription.php'">Nouveau audio</button>
+    </div>
 
-        // Sélectionner le bouton et la div de transcription
-        const micButton = document.getElementById('micButton');
-        const transcriptionDiv = document.getElementById('transcription');
-
-        // Variable pour suivre l'état de la reconnaissance
-        let isRecognizing = false;
-
-        // Fonction pour démarrer la reconnaissance vocale
-        function startRecognition() {
-            recognition.start();
-            isRecognizing = true;
-            micButton.classList.remove('inactive');
-            micButton.classList.add('active');
-        }
-
-        // Fonction pour arrêter la reconnaissance vocale
-        function stopRecognition() {
-            recognition.stop();
-            isRecognizing = false;
-            micButton.classList.remove('active');
-            micButton.classList.add('inactive');
-        }
-
-        // Écouter les résultats de la reconnaissance
-        recognition.onresult = function(event) {
-            let transcript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                transcript += event.results[i][0].transcript;
-            }
-            // Afficher la transcription en temps réel
-            transcriptionDiv.innerText = transcript;
-        };
-
-        // Gérer les erreurs
-        recognition.onerror = function(event) {
-            console.error('Erreur de reconnaissance vocale:', event.error);
-        };
-
-        // Ajouter un événement de clic au bouton
-        micButton.addEventListener('click', function() {
-            if (isRecognizing) {
-                stopRecognition();
-            } else {
-                startRecognition();
-            }
-        });
-    } else {
-        console.log('API Web Speech non supportée par ce navigateur.');
-    }
-</script>
-
-<!-- Lien vers le JS de Bootstrap -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <ul class="recordings-list">
+        <li class="recording-item">Enregistrement 1 <button>Écouter</button></li>
+        <li class="recording-item">Enregistrement 2 <button>Écouter</button></li>
+        <li class="recording-item">Enregistrement 3 <button>Écouter</button></li>
+    </ul>
+</div>
 </body>
 </html>
