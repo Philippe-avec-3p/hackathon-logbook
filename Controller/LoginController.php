@@ -5,9 +5,10 @@ $result = false;
 $bdd = new Bdd();
 session_start();
 $_SESSION['error'] = null;
+$email = $_POST['email'];
 $connect = $bdd->getConnexion()->prepare('SELECT * FROM user WHERE email = :email AND password = :password');
 $pwd = sha1($_POST['password']);
-$connect->bindParam(':email', $_POST['email']);
+$connect->bindParam(':email', $email);
 $connect->bindParam(':password', $pwd);
 $connect->execute();
 

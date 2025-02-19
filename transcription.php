@@ -6,6 +6,7 @@
     <title>Transcription et Enregistrement</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/wavesurfer.js"></script>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.804.0.min.js"></script>
     <style>
         body {
             display: flex;
@@ -69,14 +70,17 @@
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = 'fr-FR';
+
         const micButton = document.getElementById('micButton');
         const downloadButton = document.getElementById('downloadButton');
         const playButton = document.getElementById('playButton');
         const transcriptionDiv = document.getElementById('transcription');
+
         let isRecording = false;
         let mediaRecorder;
         let audioChunks = [];
         let finalTranscript = "";
+
         let wavesurfer = WaveSurfer.create({
             container: '#waveform',
             waveColor: '#007bff',
@@ -86,6 +90,15 @@
             height: 60,
             responsive: true
         });
+
+        AWS.config.update({
+            accessKeyId: 'AKIAX5ZI6KZ2Y3RVOUAV',
+            secretAccessKey: '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',
+            region: 'eu-north-1'
+        });
+
+        const s3 = new AWS.S3();
+
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
             mediaRecorder = new MediaRecorder(stream);
             mediaRecorder.ondataavailable = event => {
@@ -93,7 +106,7 @@
                     audioChunks.push(event.data);
                 }
             };
-            mediaRecorder.onstop = () => {
+            mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                 const audioUrl = URL.createObjectURL(audioBlob);
                 downloadButton.href = audioUrl;
@@ -101,8 +114,24 @@
                 playButton.style.display = 'block';
                 wavesurfer.load(audioUrl);
                 audioChunks = [];
+
+                try {
+                    console.log("Début de l'upload sur S3...");
+                    const params = {
+                        Bucket: 'logbooktest200',
+                        Key: `audio/enregistrement-${Date.now()}.wav`,
+                        Body: audioBlob,
+                        ContentType: 'audio/wav'
+                    };
+
+                    const data = await s3.upload(params).promise();
+                    console.log('Upload réussi !', data.Location);
+                } catch (error) {
+                    console.error('Erreur lors du téléversement sur S3:', error);
+                }
             };
         }).catch(error => console.error('Erreur micro:', error));
+
         function startRecording() {
             recognition.start();
             mediaRecorder.start();
@@ -111,6 +140,7 @@
             micButton.classList.add('btn-danger');
             micButton.innerText = '⏹️ Arrêter';
         }
+
         function stopRecording() {
             recognition.stop();
             mediaRecorder.stop();
@@ -119,6 +149,7 @@
             micButton.classList.add('btn-success');
             micButton.innerText = '🎤 Démarrer';
         }
+
         recognition.onresult = function(event) {
             let interimTranscript = "";
             for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -130,9 +161,11 @@
             }
             transcriptionDiv.innerHTML = finalTranscript + `<span style="color:gray;">${interimTranscript}</span>`;
         };
+
         micButton.addEventListener('click', function() {
             isRecording ? stopRecording() : startRecording();
         });
+
         playButton.addEventListener('click', function() {
             wavesurfer.playPause();
         });

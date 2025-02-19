@@ -234,12 +234,6 @@ include "public/theme.php"
             </svg>
             Espace enseignant
         </button>
-        <button class="space-button" id="student-space">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
-            </svg>
-            Espace étudiant
-        </button>
     </div>
 
     <!-- Formulaire Enseignant -->
@@ -262,46 +256,18 @@ include "public/theme.php"
             </div>
         </div>
 
-        <div class="forgot-password">
-            <a href="404.php">Mot de passe oublié ?</a>
-        </div>
 
         <button type="submit" class="submit-button">Se connecter</button>
 
-        <a href="404.php" class="register-link">Inscrivez vous sur Logbook</a>
+
     </form>
 
-    <!-- Formulaire Étudiant -->
-    <form class="login-form" id="student-form" action="404.php" method="POST">
-        <div class="form-group">
-            <label>Quelle est votre clef secrète ?</label>
-            <div class="secret-key-inputs">
-                <input type="text" maxlength="1" class="key-input" required>
-                <input type="text" maxlength="1" class="key-input" required>
-                <input type="text" maxlength="1" class="key-input" required>
-                <input type="text" maxlength="1" class="key-input" required>
-                <input type="text" maxlength="1" class="key-input" required>
-                <input type="text" maxlength="1" class="key-input" required>
-            </div>
-        </div>
 
-        <div class="form-group">
-            <label>Quelles sont les 3 premières lettres de votre prénom ?</label>
-            <div class="name-inputs">
-                <input type="text" maxlength="3" required>
-                <input type="text" maxlength="3" required>
-                <input type="text" maxlength="3" required>
-            </div>
-        </div>
-
-        <button type="submit" class="submit-button">Se connecter</button>
-    </form>
 </div>
 
 <script>
     // Gestionnaire pour la navigation entre les espaces
     const teacherSpace = document.getElementById('teacher-space');
-    const studentSpace = document.getElementById('student-space');
     const teacherForm = document.getElementById('teacher-form');
     const studentForm = document.getElementById('student-form');
 
