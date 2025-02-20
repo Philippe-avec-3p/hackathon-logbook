@@ -7,6 +7,8 @@ class User
     private $email;
     private $password;
     private $role;
+    private $nom;
+    private $prenom;
     private $token;
 
     /**
@@ -103,6 +105,26 @@ class User
     public function setToken($token)
     {
         $this->token = $token;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNom()
+    {
+        return $this->nom;
+    }
+
+    public function setNom($nom){
+        $this->nom = $nom;
+    }
+
+    public function getPrenom(){
+        return $this->prenom;
+    }
+
+    public function setPrenom($prenom){
+        $this->prenom = $prenom;
     }
 
 

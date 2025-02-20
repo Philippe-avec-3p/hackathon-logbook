@@ -8,6 +8,22 @@
     <script src="https://unpkg.com/wavesurfer.js"></script>
     <script src="https://sdk.amazonaws.com/js/aws-sdk-2.804.0.min.js"></script>
     <style>
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .logout-btn:hover {
+            background-color: #c9302c;
+        }
         body {
             display: flex;
             justify-content: center;
@@ -49,19 +65,30 @@
             background: #e0e0e0;
             border-radius: 5px;
         }
+        .back-btn {
+            margin-top: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 <div class="container">
+    <button class="logout-btn" onclick="window.location.href='logout.php'">Déconnexion</button>
     <h1>Transcription et Enregistrement</h1>
     <p class="text-center">Appuyez sur le bouton et commencez à parler :</p>
     <button id="micButton" class="btn btn-success">🎤 Démarrer</button>
-    <a id="downloadButton" class="btn btn-primary mt-2 w-100" style="display:none;" download="enregistrement.wav">⬇️ Télécharger</a>
+    <a id="downloadButton" class="btn btn-primary mt-2 w-100" style="display:none;" download="">⬇️ Télécharger</a>
     <div class="waveform-container">
         <div id="waveform"></div>
         <button id="playButton" class="btn btn-info w-100 mt-2" style="display:none;">▶️ Lecture</button>
     </div>
     <div id="transcription" class="mt-3">Votre transcription apparaîtra ici...</div>
+    <a id="textButton" class="btn btn-secondary mt-2 w-100" style="display:none;" download="">📄 Télécharger le Texte</a>
+
+    <!-- Retour à mes transcriptions -->
+    <div class="back-btn">
+        <a href="View/profIndex.php" class="btn btn-secondary" style="color: #225157ff;background-color: #ede1caff">Retour à mes transcriptions</a>
+    </div>
 </div>
 
 <script>
@@ -75,6 +102,11 @@
         const downloadButton = document.getElementById('downloadButton');
         const playButton = document.getElementById('playButton');
         const transcriptionDiv = document.getElementById('transcription');
+        const textButton = document.getElementById('textButton');
+
+
+        const userNom = "<?php echo isset($_SESSION['nom']) ? $_SESSION['nom'] : 'Inconnu'; ?>";
+        const userPrenom = "<?php echo isset($_SESSION['prenom']) ? $_SESSION['prenom'] : 'Inconnu'; ?>";
 
         let isRecording = false;
         let mediaRecorder;
@@ -99,6 +131,18 @@
 
         const s3 = new AWS.S3();
 
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function getCurrentDate() {
+            const date = new Date();
+            return date.getFullYear() + "-" + (date.getMonth() + 1).toString().padStart(2, '0') + "-" + date.getDate().toString().padStart(2, '0') + "_" + date.getHours().toString().padStart(2, '0') + "-" + date.getMinutes().toString().padStart(2, '0') + "-" + date.getSeconds().toString().padStart(2, '0');
+        }
+
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
             mediaRecorder = new MediaRecorder(stream);
             mediaRecorder.ondataavailable = event => {
@@ -110,8 +154,12 @@
                 const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                 const audioUrl = URL.createObjectURL(audioBlob);
                 downloadButton.href = audioUrl;
+                const fileId = `${userNom}_${userPrenom}_${getCurrentDate()}_${generateUUID()}`;
+                downloadButton.download = fileId + '.wav';
                 downloadButton.style.display = 'block';
                 playButton.style.display = 'block';
+                textButton.style.display = 'block';
+                textButton.download = fileId + '.txt';
                 wavesurfer.load(audioUrl);
                 audioChunks = [];
 
@@ -119,7 +167,7 @@
                     console.log("Début de l'upload sur S3...");
                     const params = {
                         Bucket: 'logbooktest200',
-                        Key: `audio/enregistrement-${Date.now()}.wav`,
+                        Key: `audio/${fileId}.wav`,
                         Body: audioBlob,
                         ContentType: 'audio/wav'
                     };
@@ -147,7 +195,7 @@
             isRecording = false;
             micButton.classList.remove('btn-danger');
             micButton.classList.add('btn-success');
-            micButton.innerText = '🎤 Démarrer';
+            micButton.innerText = 'Démarrer';
         }
 
         recognition.onresult = function(event) {
@@ -169,9 +217,16 @@
         playButton.addEventListener('click', function() {
             wavesurfer.playPause();
         });
+
+        textButton.addEventListener('click', function() {
+            const blob = new Blob([finalTranscript], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            textButton.href = url;
+        });
     } else {
         console.log('API Web Speech ou MediaRecorder non supportée.');
     }
+
 </script>
 </body>
 </html>

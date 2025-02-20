@@ -17,6 +17,9 @@ $fetch = $connect->fetchAll();
 foreach ($fetch as $row) {
     if($row['role'] == "prof") {
         $_SESSION['prof'] = true;
+        $_SESSION['nom'] = $row['nom'];
+        $_SESSION['prenom'] = $row['prenom'];
+        $_SESSION['idUser'] = $row['id'];
         header('Location: ../View/profIndex.php');
         exit();
     }else if ($row['role'] == "student") {
