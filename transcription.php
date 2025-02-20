@@ -1,3 +1,7 @@
+<?php
+session_start();
+?>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -104,7 +108,6 @@
         const transcriptionDiv = document.getElementById('transcription');
         const textButton = document.getElementById('textButton');
 
-
         const userNom = "<?php echo isset($_SESSION['nom']) ? $_SESSION['nom'] : 'Inconnu'; ?>";
         const userPrenom = "<?php echo isset($_SESSION['prenom']) ? $_SESSION['prenom'] : 'Inconnu'; ?>";
 
@@ -153,8 +156,8 @@
             mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                 const audioUrl = URL.createObjectURL(audioBlob);
-                downloadButton.href = audioUrl;
                 const fileId = `${userNom}_${userPrenom}_${getCurrentDate()}_${generateUUID()}`;
+                downloadButton.href = audioUrl;
                 downloadButton.download = fileId + '.wav';
                 downloadButton.style.display = 'block';
                 playButton.style.display = 'block';
@@ -164,7 +167,8 @@
                 audioChunks = [];
 
                 try {
-                    console.log("Début de l'upload sur S3...");
+                    console.log("Début de l'upload sur S3 (audio)...");
+
                     const params = {
                         Bucket: 'logbooktest200',
                         Key: `audio/${fileId}.wav`,
@@ -173,12 +177,37 @@
                     };
 
                     const data = await s3.upload(params).promise();
-                    console.log('Upload réussi !', data.Location);
+                    console.log('Upload audio réussi !', data.Location);
+
+                    // Création et upload du fichier texte (transcription)
+                    const blob = new Blob([finalTranscript], { type: 'text/plain' });
+                    const textParams = {
+                        Bucket: 'logbooktest200',
+                        Key: `text/${fileId}.txt`,
+                        Body: blob,
+                        ContentType: 'text/plain'
+                    };
+
+                    const textData = await s3.upload(textParams).promise();
+                    console.log('Upload du fichier texte réussi !', textData.Location); // Vérifie la réponse de S3
+
                 } catch (error) {
                     console.error('Erreur lors du téléversement sur S3:', error);
                 }
             };
         }).catch(error => console.error('Erreur micro:', error));
+
+        recognition.onresult = function(event) {
+            let interimTranscript = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript + ". ";
+                } else {
+                    interimTranscript = event.results[i][0].transcript;
+                }
+            }
+            transcriptionDiv.innerHTML = finalTranscript + `<span style="color:gray;">${interimTranscript}</span>`;
+        };
 
         function startRecording() {
             recognition.start();
@@ -198,18 +227,6 @@
             micButton.innerText = 'Démarrer';
         }
 
-        recognition.onresult = function(event) {
-            let interimTranscript = "";
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript + ". ";
-                } else {
-                    interimTranscript = event.results[i][0].transcript;
-                }
-            }
-            transcriptionDiv.innerHTML = finalTranscript + `<span style="color:gray;">${interimTranscript}</span>`;
-        };
-
         micButton.addEventListener('click', function() {
             isRecording ? stopRecording() : startRecording();
         });
@@ -218,15 +235,10 @@
             wavesurfer.playPause();
         });
 
-        textButton.addEventListener('click', function() {
-            const blob = new Blob([finalTranscript], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            textButton.href = url;
-        });
     } else {
         console.log('API Web Speech ou MediaRecorder non supportée.');
     }
 
 </script>
 </body>
-</html>
+</html
