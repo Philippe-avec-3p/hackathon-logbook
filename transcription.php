@@ -81,18 +81,11 @@ session_start();
     <h1>Transcription et Enregistrement</h1>
     <p class="text-center">Appuyez sur le bouton et commencez à parler :</p>
     <button id="micButton" class="btn btn-success">🎤 Démarrer</button>
-    <a id="downloadButton" class="btn btn-primary mt-2 w-100" style="display:none;" download="">⬇️ Télécharger</a>
     <div class="waveform-container">
         <div id="waveform"></div>
         <button id="playButton" class="btn btn-info w-100 mt-2" style="display:none;">▶️ Lecture</button>
     </div>
     <div id="transcription" class="mt-3">Votre transcription apparaîtra ici...</div>
-    <a id="textButton" class="btn btn-secondary mt-2 w-100" style="display:none;" download="">📄 Télécharger le Texte</a>
-
-    <!-- Retour à mes transcriptions -->
-    <div class="back-btn">
-        <a href="View/profIndex.php" class="btn btn-secondary" style="color: #225157ff;background-color: #ede1caff">Retour à mes transcriptions</a>
-    </div>
 </div>
 
 <script>
@@ -103,10 +96,8 @@ session_start();
         recognition.lang = 'fr-FR';
 
         const micButton = document.getElementById('micButton');
-        const downloadButton = document.getElementById('downloadButton');
         const playButton = document.getElementById('playButton');
         const transcriptionDiv = document.getElementById('transcription');
-        const textButton = document.getElementById('textButton');
 
         const userNom = "<?php echo isset($_SESSION['nom']) ? $_SESSION['nom'] : 'Inconnu'; ?>";
         const userPrenom = "<?php echo isset($_SESSION['prenom']) ? $_SESSION['prenom'] : 'Inconnu'; ?>";
@@ -115,6 +106,7 @@ session_start();
         let mediaRecorder;
         let audioChunks = [];
         let finalTranscript = "";
+        let silenceTimer;
 
         let wavesurfer = WaveSurfer.create({
             container: '#waveform',
@@ -127,23 +119,40 @@ session_start();
         });
 
         AWS.config.update({
-            accessKeyId: 'AKIAX5ZI6KZ2Y3RVOUAV',
-            secretAccessKey: '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',
+            accessKeyId: 'AKIAX5ZI6KZ26XKCOPMR',
+            secretAccessKey: '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',
             region: 'eu-north-1'
         });
 
         const s3 = new AWS.S3();
 
-        function generateUUID() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
-
         function getCurrentDate() {
             const date = new Date();
-            return date.getFullYear() + "-" + (date.getMonth() + 1).toString().padStart(2, '0') + "-" + date.getDate().toString().padStart(2, '0') + "_" + date.getHours().toString().padStart(2, '0') + "-" + date.getMinutes().toString().padStart(2, '0') + "-" + date.getSeconds().toString().padStart(2, '0');
+            return date.getFullYear() + "-" + (date.getMonth() + 1).toString().padStart(2, '0') + "-" + date.getDate().toString().padStart(2, '0') +
+                "_" + date.getHours().toString().padStart(2, '0') + "-" + date.getMinutes().toString().padStart(2, '0') + "-" + date.getSeconds().toString().padStart(2, '0');
+        }
+
+        function stopRecording() {
+            recognition.stop();
+            mediaRecorder.stop();
+            isRecording = false;
+            micButton.classList.remove('btn-danger');
+            micButton.classList.add('btn-success');
+            micButton.innerText = '🎤 Démarrer';
+        }
+
+        function startRecording() {
+            recognition.start();
+            mediaRecorder.start();
+            isRecording = true;
+            micButton.classList.remove('btn-success');
+            micButton.classList.add('btn-danger');
+            micButton.innerText = '⏹️ En cours...';
+        }
+
+        function resetSilenceTimer() {
+            clearTimeout(silenceTimer);
+            silenceTimer = setTimeout(stopRecording, 3000);
         }
 
         navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
@@ -155,20 +164,10 @@ session_start();
             };
             mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                const audioUrl = URL.createObjectURL(audioBlob);
-                const fileId = `${userNom}_${userPrenom}_${getCurrentDate()}_${generateUUID()}`;
-                downloadButton.href = audioUrl;
-                downloadButton.download = fileId + '.wav';
-                downloadButton.style.display = 'block';
-                playButton.style.display = 'block';
-                textButton.style.display = 'block';
-                textButton.download = fileId + '.txt';
-                wavesurfer.load(audioUrl);
+                const fileId = `${userNom}_${userPrenom}_${getCurrentDate()}`;
                 audioChunks = [];
 
                 try {
-                    console.log("Début de l'upload sur S3 (audio)...");
-
                     const params = {
                         Bucket: 'logbooktest200',
                         Key: `audio/${fileId}.wav`,
@@ -176,23 +175,19 @@ session_start();
                         ContentType: 'audio/wav'
                     };
 
-                    const data = await s3.upload(params).promise();
-                    console.log('Upload audio réussi !', data.Location);
+                    await s3.upload(params).promise();
 
-                    // Création et upload du fichier texte (transcription)
-                    const blob = new Blob([finalTranscript], { type: 'text/plain' });
+                    const textBlob = new Blob([finalTranscript], { type: 'text/plain' });
                     const textParams = {
                         Bucket: 'logbooktest200',
                         Key: `text/${fileId}.txt`,
-                        Body: blob,
+                        Body: textBlob,
                         ContentType: 'text/plain'
                     };
 
-                    const textData = await s3.upload(textParams).promise();
-                    console.log('Upload du fichier texte réussi !', textData.Location); // Vérifie la réponse de S3
-
+                    await s3.upload(textParams).promise();
                 } catch (error) {
-                    console.error('Erreur lors du téléversement sur S3:', error);
+                    console.error('Erreur S3:', error);
                 }
             };
         }).catch(error => console.error('Erreur micro:', error));
@@ -202,6 +197,7 @@ session_start();
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 if (event.results[i].isFinal) {
                     finalTranscript += event.results[i][0].transcript + ". ";
+                    resetSilenceTimer();
                 } else {
                     interimTranscript = event.results[i][0].transcript;
                 }
@@ -209,36 +205,8 @@ session_start();
             transcriptionDiv.innerHTML = finalTranscript + `<span style="color:gray;">${interimTranscript}</span>`;
         };
 
-        function startRecording() {
-            recognition.start();
-            mediaRecorder.start();
-            isRecording = true;
-            micButton.classList.remove('btn-success');
-            micButton.classList.add('btn-danger');
-            micButton.innerText = '⏹️ Arrêter';
-        }
-
-        function stopRecording() {
-            recognition.stop();
-            mediaRecorder.stop();
-            isRecording = false;
-            micButton.classList.remove('btn-danger');
-            micButton.classList.add('btn-success');
-            micButton.innerText = 'Démarrer';
-        }
-
-        micButton.addEventListener('click', function() {
-            isRecording ? stopRecording() : startRecording();
-        });
-
-        playButton.addEventListener('click', function() {
-            wavesurfer.playPause();
-        });
-
-    } else {
-        console.log('API Web Speech ou MediaRecorder non supportée.');
+        micButton.addEventListener('click', () => isRecording ? stopRecording() : startRecording());
     }
-
 </script>
 </body>
-</html
+</html>
