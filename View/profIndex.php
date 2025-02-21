@@ -17,7 +17,17 @@ session_start();
         body {
             font-family: Arial, sans-serif;
             background-color: #f8f9fa;
+            opacity: 0;  /* La page est invisible au début */
+            transform: translateX(-100%);  /* Positionnée hors de l'écran à gauche */
+            transition: opacity 1s ease-out, transform 1s ease-out;  /* Transition fluide pour le fondu et le glissement */
         }
+
+        body.loaded {
+            opacity: 1;  /* La page devient visible */
+            transform: translateX(0);  /* Le contenu glisse pour arriver à sa position normale */
+        }
+
+
 
         .container {
             max-width: 800px;
@@ -126,6 +136,12 @@ session_start();
 </div>
 
 <script>
+    // Attendre que la page soit entièrement chargée
+    window.onload = function() {
+        // Ajouter la classe 'loaded' au body une fois le chargement terminé
+        document.body.classList.add('loaded');
+    };
+
     AWS.config.update({
         accessKeyId: 'AKIAX5ZI6KZ2Y3RVOUAV',
         secretAccessKey: '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',

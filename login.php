@@ -13,6 +13,7 @@ include "public/theme.php"
         :root {
             --primary-color: #004D4D;
             --secondary-color: #00A3A3;
+            --transition-duration: 0.4s;
         }
 
         * {
@@ -26,6 +27,7 @@ include "public/theme.php"
             font-family: Arial, sans-serif;
             display: flex;
             min-height: 100vh;
+            overflow: hidden;
         }
 
         .left-panel {
@@ -35,12 +37,18 @@ include "public/theme.php"
             width: 40%;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transform: translateX(-100%);
+            animation: slideInLeft var(--transition-duration) ease-out forwards;
         }
 
         .logo {
             font-size: 2.5rem;
             font-weight: bold;
             margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeIn var(--transition-duration) 0.2s forwards;
         }
 
         .slogan {
@@ -48,12 +56,16 @@ include "public/theme.php"
             line-height: 1.4;
             margin-bottom: 2rem;
             text-align: center;
+            opacity: 0;
+            animation: fadeIn var(--transition-duration) 0.4s forwards;
         }
 
         .image-container {
             border-radius: 1rem;
             overflow: hidden;
             margin-top: 2rem;
+            opacity: 0;
+            animation: fadeIn var(--transition-duration) 0.6s forwards;
         }
 
         .image-container img {
@@ -68,12 +80,16 @@ include "public/theme.php"
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            transform: translateX(100%);
+            animation: slideInRight var(--transition-duration) ease-out forwards;
         }
 
         .connect-header {
             color: var(--primary-color);
             font-size: 2rem;
             margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeIn var(--transition-duration) 0.2s forwards;
         }
 
         .space-buttons {
@@ -82,6 +98,8 @@ include "public/theme.php"
             margin-bottom: 3rem;
             width: 100%;
             border-bottom: 2px solid #E6E6E6;
+            opacity: 0;
+            animation: fadeIn var(--transition-duration) 0.4s forwards;
         }
 
         .space-button {
@@ -116,6 +134,8 @@ include "public/theme.php"
             width: 100%;
             max-width: 500px;
             display: none;
+            opacity: 0;
+            animation: fadeIn var(--transition-duration) 0.6s forwards;
         }
 
         .login-form.active {
@@ -156,32 +176,6 @@ include "public/theme.php"
             color: #666;
         }
 
-        .secret-key-inputs {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .secret-key-inputs input {
-            width: 50px;
-            height: 50px;
-            text-align: center;
-            border: 1px solid #E6E6E6;
-            border-radius: 0.5rem;
-            font-size: 1.2rem;
-        }
-
-        .name-inputs {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .name-inputs input {
-            flex: 1;
-            padding: 0.8rem;
-            border: 1px solid #E6E6E6;
-            border-radius: 0.5rem;
-        }
-
         .submit-button {
             width: 100%;
             padding: 1rem;
@@ -192,16 +186,11 @@ include "public/theme.php"
             cursor: pointer;
             font-size: 1rem;
             margin-top: 2rem;
+            transition: background-color var(--transition-duration);
         }
 
-        .forgot-password {
-            text-align: right;
-            margin-top: 1rem;
-        }
-
-        .forgot-password a {
-            color: #666;
-            text-decoration: none;
+        .submit-button:hover {
+            background-color: var(--secondary-color);
         }
 
         .register-link {
@@ -209,6 +198,25 @@ include "public/theme.php"
             text-decoration: none;
             margin-top: 2rem;
             display: inline-block;
+        }
+
+        /* Animations */
+        @keyframes slideInLeft {
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
         }
     </style>
 </head>
@@ -247,22 +255,14 @@ include "public/theme.php"
             <label>Mot de passe</label>
             <div class="password-input-container">
                 <input type="password" name="password" class="form-input" required>
-                <button type="button" class="password-toggle">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                </button>
             </div>
         </div>
 
-
         <button type="submit" class="submit-button">Se connecter</button>
-
-
     </form>
-
-
+    <div class="p-md-3">
+        <b><a href="register.php" style="text-decoration: none; color: #225157ff;">Inscrivez vous sur Logbook</a></b>
+    </div>
 </div>
 
 <script>
@@ -297,19 +297,6 @@ include "public/theme.php"
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Backspace' && !e.target.value && index > 0) {
                 keyInputs[index - 1].focus();
-            }
-        });
-    });
-
-    // Gestionnaire pour afficher/masquer le mot de passe
-    const passwordToggles = document.querySelectorAll('.password-toggle');
-    passwordToggles.forEach(toggle => {
-        toggle.addEventListener('click', (e) => {
-            const input = e.target.closest('.password-input-container').querySelector('input');
-            if (input.type === 'password') {
-                input.type = 'text';
-            } else {
-                input.type = 'password';
             }
         });
     });
