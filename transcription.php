@@ -73,9 +73,28 @@ session_start();
             margin-top: 20px;
             text-align: center;
         }
+        .loading-screen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            transition: opacity 1s ease-out, visibility 1s;
+            z-index: 9999;
+        }
+        .loading-screen.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
+<div class="loading-screen"></div>
+
 <div class="container">
     <button class="logout-btn" onclick="window.location.href='logout.php'">Déconnexion</button>
     <h1>Transcription et Enregistrement</h1>
@@ -94,6 +113,9 @@ session_start();
 </div>
 
 <script>
+    window.addEventListener("load", function () {
+        document.querySelector(".loading-screen").classList.add("fade-out");
+    });
     if ('webkitSpeechRecognition' in window && 'MediaRecorder' in window) {
         const recognition = new webkitSpeechRecognition();
         recognition.continuous = true;
